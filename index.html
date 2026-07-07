@@ -263,29 +263,21 @@
   document.getElementById('suitRow').innerHTML = SUIT_ORDER.map(s=>SUITS[s]).join('');
 
    // ---------- persistence ----------
-  async function loadState(){
-    // Lauscht live auf Änderungen in der Google Cloud
+    async function loadState(){
     dbRef.on("value", (snapshot) => {
       const cloudData = snapshot.val();
       blockSync = true;
-      
-      // Wenn Google Daten hat, laden wir sie. Wenn nicht, starten wir eine leere Liste
       state = cloudData ? JSON.parse(cloudData) : structuredClone(DEFAULT_STATE);
       if (!cloudData) dbRef.set(JSON.stringify(state));
-      
-      render(); // Aktualisiert die Punkte auf dem Bildschirm
+      render();
       blockSync = false;
     });
   }
   async function saveState(){
-    if (blockSync) return; // Verhindert Endlosschleifen
-    try { 
-      // Schickt das neue Spiel oder die geänderten Punkte sofort hoch zu Google
-      await dbRef.set(JSON.stringify(state)); 
-    }
+    if (blockSync) return;
+    try { await dbRef.set(JSON.stringify(state)); }
     catch(e){ console.error('Speichern fehlgeschlagen', e); }
   }
-
 
   // ---------- scoring ----------
   function computeDeltas(game){
