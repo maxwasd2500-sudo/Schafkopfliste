@@ -673,13 +673,12 @@
   loadState();
 })();
 </script>
-<!-- AB HIER KOPIEREN UND GANZ UNTEN IN DIE ALLERLETZTE ZEILE EINFÜGEN -->
+<!-- AB HIER KOPIEREN UND GANZ UNTEN ERSETZEN -->
 <script type="module">
-  // 1. Firebase laden
+  // 1. Korrekte Firebase-Imports und Config
   import { initializeApp } from "https://gstatic.com";
   import { getDatabase, ref, set, onValue } from "https://gstatic.com";
 
-  // Deine echten Firebase-Daten von deinem Screenshot
   const firebaseConfig = {
     apiKey: "AIzaSyC-0fysH5YmYrBex5SzFTp1Trp53m4_mDQ",
     authDomain: "://firebaseapp.com",
@@ -694,50 +693,24 @@
   const database = getDatabase(app);
   const dbRef = ref(database, "schafkopf_speicher");
 
-  // Variable, um Endlosschleifen beim Synchronisieren zu verhindern
-  let blockiereSenden = false;
-
-  // 2. Aus der Cloud laden (Sobald sich bei Firebase etwas ändert)
+  // 2. Synchronisation: Cloud <-> localStorage
   onValue(dbRef, (snapshot) => {
-      const cloudDaten = snapshot.val();
-      if (!cloudDaten) return;
-
-      let hatSichWasGeaendert = false;
-      blockiereSenden = true;
-
-      // Alle Daten von Google in den Browser-Speicher schreiben
-      for (let key in cloudDaten) {
-          if (localStorage.getItem(key) !== cloudDaten[key]) {
-              localStorage.setItem(key, cloudDaten[key]);
-              hatSichWasGeaendert = true;
-          }
-      }
-
-      blockiereSenden = false;
-
-      // Wenn neue Punkte reinkamen, Seite neu laden, damit Claudes Code die neuen Punkte anzeigt
-      if (hatSichWasGeaendert) {
-          window.location.reload();
+      const data = snapshot.val();
+      if (data) {
+          Object.entries(data).forEach(([key, val]) => localStorage.setItem(key, val));
+          window.location.reload(); // Daten-Update
       }
   });
 
-  // 3. In die Cloud hochladen (Immer wenn geklickt oder getippt wird)
-  function speichereInCloud() {
-      if (blockiereSenden) return;
-      
-      const lokalerSpeicher = {};
-      for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          lokalerSpeicher[key] = localStorage.getItem(key);
-      }
-      
-      // Nur hochladen, wenn überhaupt Daten da sind
-      if (Object.keys(lokalerSpeicher).length > 0) {
-          set(dbRef, lokalerSpeicher);
-      }
-  }
-
-  // Lauscht auf alle Klicks (Buttons) und Tastatur-Eingaben
-  document.addEventListener("click", () => setTimeout(speichereInCloud, 100));
-  document.addEventListener("input", () => setTimeout(speichereInCloud, 500));
+  // 3. Automatisches Speichern bei Klick
+  document.addEventListener("click", () => {
+      setTimeout(() => {
+          const syncData = {};
+          for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.includes('schafkopf')) syncData[key] = localStorage.getItem(key);
+          }
+          set(dbRef, syncData);
+      }, 200);
+  });
 </script>
