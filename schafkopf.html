@@ -1,0 +1,675 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --felt: #1F3A2E;
+    --felt-dark: #142720;
+    --felt-line: rgba(241,231,208,0.14);
+    --parchment: #F1E7D0;
+    --parchment-dim: #e7dabb;
+    --ink: #2A2118;
+    --ink-soft: #5b5140;
+    --gold: #C9A227;
+    --gold-bright: #E4C355;
+    --rust: #A63D2F;
+    --rust-soft: #c96650;
+    --cream: #F1E7D0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--felt);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,255,255,0.03), transparent 40%);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+  }
+  .app{ max-width: 760px; margin: 0 auto; padding: 28px 18px 100px; }
+
+  /* header */
+  .header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .header h1{
+    font-family:'Fraunces', serif; font-weight:700; font-size: 34px; letter-spacing:0.2px;
+    margin:0 0 4px; color: var(--gold-bright);
+  }
+  .header p{ margin:0; color: rgba(241,231,208,0.65); font-size:14px; }
+  .icon-btn{
+    background: transparent; border: 1px solid var(--felt-line); color: var(--cream);
+    width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; transition: border-color .15s, background .15s;
+  }
+  .icon-btn:hover{ border-color: var(--gold); background: rgba(201,162,39,0.08); }
+  .icon-btn svg{ width:20px; height:20px; }
+
+  .suit-row{ display:flex; gap:18px; justify-content:center; align-items:center; opacity:0.55; margin:22px 0 26px; }
+  .suit-row svg{ width:16px; height:16px; }
+
+  /* leaderboard */
+  .board{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:12px; }
+  .card{
+    background: var(--parchment); color: var(--ink); border-radius: 10px; padding: 16px 16px 14px;
+    position:relative; border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  }
+  .card.lead{ box-shadow: 0 0 0 2px var(--gold), 0 8px 20px rgba(0,0,0,0.25); }
+  .card .suit-mark{ position:absolute; top:12px; right:12px; width:16px; height:16px; opacity:0.35; }
+  .card .name{ font-size:13px; font-weight:600; color: var(--ink-soft); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; padding-right:20px;}
+  .card .points{ font-family:'Fraunces', serif; font-weight:600; font-size:32px; line-height:1; }
+  .card .points.neg{ color: var(--rust); }
+  .card .points.pos{ color: #2c5a3f; }
+
+  .empty{
+    text-align:center; padding: 40px 20px; color: rgba(241,231,208,0.6);
+    border: 1px dashed var(--felt-line); border-radius:10px; font-size:14px;
+  }
+  .empty button{ margin-top:12px; }
+
+  /* section headers */
+  .section-title{
+    font-family:'Fraunces', serif; font-size:15px; text-transform:uppercase; letter-spacing:1px;
+    color: rgba(241,231,208,0.55); margin: 34px 0 12px; display:flex; align-items:center; gap:10px;
+  }
+  .section-title::after{ content:''; flex:1; height:1px; background: var(--felt-line); }
+
+  /* history */
+  .history-item{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding: 11px 4px; border-bottom: 1px solid var(--felt-line); font-size: 13.5px;
+  }
+  .history-item:last-child{ border-bottom:none; }
+  .history-main{ color: var(--cream); }
+  .history-main b{ color: var(--gold-bright); font-weight:600; }
+  .history-sub{ color: rgba(241,231,208,0.5); font-size:12px; margin-top:2px; }
+  .history-del{
+    background:none; border:none; color: rgba(241,231,208,0.35); cursor:pointer; font-size:16px;
+    padding:4px 8px; flex-shrink:0;
+  }
+  .history-del:hover{ color: var(--rust-soft); }
+  .history-deltas{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color: rgba(241,231,208,0.55); margin-top:3px; }
+  .history-deltas span.pos{ color:#8fd4ab; }
+  .history-deltas span.neg{ color: var(--rust-soft); }
+
+  /* fab */
+  .fab{
+    position: fixed; right: 22px; bottom: 26px; width:58px; height:58px; border-radius:50%;
+    background: var(--gold); color: var(--felt-dark); border:none; cursor:pointer;
+    font-size: 30px; display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.4); transition: transform .15s, background .15s;
+    z-index: 20;
+  }
+  .fab:hover{ transform: scale(1.06); background: var(--gold-bright); }
+
+  /* overlay + modal/panel */
+  .overlay{
+    position:fixed; inset:0; background: rgba(10,18,14,0.6); display:none; align-items:flex-end;
+    justify-content:center; z-index:30; backdrop-filter: blur(2px);
+  }
+  .overlay.open{ display:flex; }
+  @media (min-width: 600px){ .overlay{ align-items:center; } }
+
+  .panel{
+    background: var(--felt-dark); color: var(--cream); width:100%; max-width:520px;
+    border-radius: 18px 18px 0 0; padding: 22px 20px 26px; max-height:88vh; overflow-y:auto;
+    border-top: 1px solid var(--felt-line);
+    animation: slideup .2s ease-out;
+  }
+  @media (min-width: 600px){ .panel{ border-radius: 14px; margin:20px; } }
+  @keyframes slideup{ from{ transform: translateY(24px); opacity:0; } to{ transform:none; opacity:1; } }
+
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .panel-head h2{ font-family:'Fraunces', serif; font-size:22px; margin:0; color: var(--gold-bright); font-weight:600; }
+  .panel-close{ background:none; border:none; color: var(--cream); font-size:22px; cursor:pointer; opacity:0.6; line-height:1;}
+  .panel-close:hover{ opacity:1; }
+
+  label.field-label{ display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.6px; color: rgba(241,231,208,0.55); margin: 16px 0 8px; }
+  label.field-label:first-child{ margin-top:0; }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    padding: 9px 14px; border-radius: 20px; border:1px solid var(--felt-line); background: transparent;
+    color: var(--cream); cursor:pointer; font-size:13.5px; font-family:'Inter',sans-serif; transition: all .12s;
+  }
+  .chip.selected{ background: var(--gold); border-color: var(--gold); color: var(--felt-dark); font-weight:600; }
+  .chip:disabled{ opacity:0.3; cursor:not-allowed; }
+
+  .toggle-row{ display:flex; gap:8px; }
+  .toggle-row .chip{ flex:1; text-align:center; }
+
+  input[type=text], input[type=number], select{
+    width:100%; background: rgba(241,231,208,0.06); border:1px solid var(--felt-line); color:var(--cream);
+    padding:10px 12px; border-radius:8px; font-size:14px; font-family:'Inter',sans-serif;
+  }
+  input[type=number]{ font-family:'JetBrains Mono', monospace; }
+  select{ appearance:none; }
+  input:focus, select:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+
+  .check-row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:4px; }
+  .check-row label{ display:flex; align-items:center; gap:7px; font-size:13.5px; cursor:pointer; }
+  .check-row input[type=checkbox]{ width:16px; height:16px; accent-color: var(--gold); }
+
+  .btn-primary{
+    width:100%; padding:13px; margin-top:22px; background: var(--gold); color: var(--felt-dark);
+    border:none; border-radius:9px; font-weight:700; font-size:15px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .btn-primary:hover{ background: var(--gold-bright); }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .btn-ghost{
+    background:none; border:1px solid var(--felt-line); color: var(--cream); padding:8px 12px; border-radius:7px;
+    cursor:pointer; font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .btn-ghost:hover{ border-color: var(--gold); }
+
+  .settings-item{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .settings-item input[type=text]{ flex:1; }
+  .settings-item input[type=number]{ width:80px; }
+  .settings-item select{ width:120px; flex-shrink:0; }
+  .rm-btn{ background:none; border:none; color: rgba(241,231,208,0.4); cursor:pointer; font-size:18px; padding:4px 6px; }
+  .rm-btn:hover{ color: var(--rust-soft); }
+
+  .add-row{ display:flex; gap:8px; margin-top:10px; }
+  .add-row input, .add-row select{ flex:1; }
+  .add-row button{ flex-shrink:0; }
+
+  .tab-row{ display:flex; gap:6px; margin-bottom:18px; }
+  .tab{ flex:1; padding:9px; text-align:center; border-radius:8px; border:1px solid var(--felt-line); background:transparent; color: var(--cream); cursor:pointer; font-size:13px; }
+  .tab.active{ background: rgba(201,162,39,0.15); border-color: var(--gold); color: var(--gold-bright); font-weight:600; }
+
+  .hint{ font-size:12px; color: rgba(241,231,208,0.45); margin-top:6px; line-height:1.4; }
+  .danger-zone{ margin-top:26px; padding-top:16px; border-top:1px solid var(--felt-line); }
+  .danger-zone button{ color: var(--rust-soft); border-color: rgba(166,61,47,0.4); }
+
+  .loading{ text-align:center; padding:60px 20px; color: rgba(241,231,208,0.5); font-size:14px; }
+</style>
+
+<div class="app" id="app">
+  <div class="header">
+    <div>
+      <h1>Schafkopf-Tafel</h1>
+      <p>Die Punkte der Runde – für alle sichtbar</p>
+    </div>
+    <button class="icon-btn" id="settingsBtn" title="Einstellungen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="suit-row" id="suitRow"></div>
+
+  <div id="boardWrap"><div class="loading">Die Tafel wird aufgedeckt …</div></div>
+
+  <div id="historyWrap"></div>
+</div>
+
+<button class="fab" id="fabBtn" title="Neues Spiel">+</button>
+
+<div class="overlay" id="gameOverlay">
+  <div class="panel" id="gamePanel"></div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="panel" id="settingsPanel"></div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'schafkopf_state_v1';
+  const uid = () => Math.random().toString(36).slice(2,9);
+
+  const DEFAULT_STATE = {
+    players: [],
+    gameTypes: [
+      { id: uid(), name: 'Sauspiel', mode: 'partner', baseValue: 20 },
+      { id: uid(), name: 'Wenz', mode: 'solo', baseValue: 50 },
+      { id: uid(), name: 'Farbwenz', mode: 'solo', baseValue: 60 },
+      { id: uid(), name: 'Geier', mode: 'solo', baseValue: 40 },
+      { id: uid(), name: 'Solo', mode: 'solo', baseValue: 50 },
+      { id: uid(), name: 'Ramsch', mode: 'ramsch', baseValue: 10 },
+    ],
+    settings: { schneiderBonus: 10, schwarzBonus: 20, laufendeValue: 10 },
+    games: []
+  };
+
+  let state = null;
+  let newGameDraft = null;
+
+  // ---------- SVG suit icons ----------
+  const SUITS = {
+    herz: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.6c-.3 0-.6-.1-.8-.3C6.8 16.6 3 13.1 3 9.1 3 6.3 5.2 4 8 4c1.7 0 3.2.9 4 2.2C12.8 4.9 14.3 4 16 4c2.8 0 5 2.3 5 5.1 0 4-3.8 7.5-8.2 11.2-.2.2-.5.3-.8.3z"/></svg>`,
+    eichel: `<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="14.5" rx="5.2" ry="6.3"/><path d="M7.2 9.2c0-2.6 2.1-4.4 4.8-4.4s4.8 1.8 4.8 4.4c0 .6-1.6 1.1-4.8 1.1s-4.8-.5-4.8-1.1z"/><rect x="11" y="2.2" width="2" height="3.4" rx="1"/></svg>`,
+    gras: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c3 3 7 6.5 7 11a7 7 0 01-14 0c0-4.5 4-8 7-11z"/><path d="M12 13v9" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>`,
+    schellen: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="2.4" fill="var(--felt-dark,#1F3A2E)"/><rect x="10.8" y="2.4" width="2.4" height="3" rx="1"/></svg>`
+  };
+  const SUIT_ORDER = ['eichel','gras','herz','schellen'];
+
+  document.getElementById('suitRow').innerHTML = SUIT_ORDER.map(s=>SUITS[s]).join('');
+
+  // ---------- persistence ----------
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      state = res ? JSON.parse(res.value) : structuredClone(DEFAULT_STATE);
+    }catch(e){
+      state = structuredClone(DEFAULT_STATE);
+    }
+    render();
+  }
+  async function saveState(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    }catch(e){ console.error('Speichern fehlgeschlagen', e); }
+  }
+
+  // ---------- scoring ----------
+  function computeDeltas(game){
+    const gt = state.gameTypes.find(g=>g.id===game.gameTypeId);
+    const deltas = {};
+    game.roundPlayers.forEach(id=>deltas[id]=0);
+    if(!gt) return deltas;
+    if(gt.mode === 'ramsch'){
+      const perPair = gt.baseValue + (game.laufende||0)*state.settings.laufendeValue;
+      const losers = game.verlierer||[];
+      const winners = game.roundPlayers.filter(id=>!losers.includes(id));
+      losers.forEach(l=>{
+        winners.forEach(w=>{
+          deltas[l] -= perPair;
+          deltas[w] += perPair;
+        });
+      });
+    } else {
+      let value = gt.baseValue;
+      if(game.schneider) value += state.settings.schneiderBonus;
+      if(game.schwarz) value += state.settings.schwarzBonus;
+      value += (game.laufende||0) * state.settings.laufendeValue;
+      if(game.kontra) value *= 2;
+      if(game.re) value *= 2;
+      const spieler = game.spieler||[];
+      const gegner = game.roundPlayers.filter(id=>!spieler.includes(id));
+      const sign = game.result === 'win' ? 1 : -1;
+      const perSpieler = spieler.length ? (sign*value*gegner.length)/spieler.length : 0;
+      spieler.forEach(id=> deltas[id] += perSpieler);
+      gegner.forEach(id=> deltas[id] -= sign*value);
+    }
+    return deltas;
+  }
+
+  function totals(){
+    const t = {};
+    state.players.forEach(p=> t[p.id]=0);
+    state.games.forEach(g=>{
+      const d = computeDeltas(g);
+      Object.entries(d).forEach(([id,val])=>{ t[id]=(t[id]||0)+val; });
+    });
+    return t;
+  }
+
+  // ---------- rendering ----------
+  function render(){
+    renderBoard();
+    renderHistory();
+  }
+
+  function renderBoard(){
+    const wrap = document.getElementById('boardWrap');
+    if(state.players.length === 0){
+      wrap.innerHTML = `<div class="empty">Noch keine Mitspieler auf der Tafel.<br>Leg sie in den Einstellungen an.<br><button class="btn-ghost" onclick="window.__sk.openSettings('players')">Mitspieler anlegen</button></div>`;
+      return;
+    }
+    const t = totals();
+    const sorted = [...state.players].sort((a,b)=> (t[b.id]||0)-(t[a.id]||0));
+    const max = Math.max(...sorted.map(p=>t[p.id]||0));
+    wrap.innerHTML = `<div class="board">${sorted.map((p,i)=>{
+      const val = t[p.id]||0;
+      const cls = val>0?'pos':(val<0?'neg':'');
+      const lead = (val===max && val!==0) ? 'lead' : '';
+      const suit = SUIT_ORDER[i % SUIT_ORDER.length];
+      return `<div class="card ${lead}">
+        <div class="suit-mark">${SUITS[suit]}</div>
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="points ${cls}">${val>0?'+':''}${val}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderHistory(){
+    const wrap = document.getElementById('historyWrap');
+    if(state.games.length===0){ wrap.innerHTML=''; return; }
+    const rows = [...state.games].slice().reverse().map(g=>{
+      const gt = state.gameTypes.find(x=>x.id===g.gameTypeId);
+      const d = computeDeltas(g);
+      const names = id => (state.players.find(p=>p.id===id)||{}).name || '?';
+      let who = '';
+      if(gt && gt.mode==='ramsch'){
+        who = 'Verlierer: ' + (g.verlierer||[]).map(names).join(', ');
+      } else {
+        who = (g.spieler||[]).map(names).join(' & ') + ' — ' + (g.result==='win'?'gewonnen':'verloren');
+      }
+      const tags = [g.schneider&&'Schneider', g.schwarz&&'Schwarz', g.kontra&&'Kontra', g.re&&'Re', g.laufende?`${g.laufende} Laufende`:null].filter(Boolean).join(' · ');
+      const deltaStr = Object.entries(d).map(([id,v])=>`<span class="${v>0?'pos':(v<0?'neg':'')}">${names(id)} ${v>0?'+':''}${v}</span>`).join('  ');
+      return `<div class="history-item">
+        <div>
+          <div class="history-main"><b>${gt?escapeHtml(gt.name):'?'}</b> — ${escapeHtml(who)}</div>
+          ${tags ? `<div class="history-sub">${escapeHtml(tags)}</div>` : ''}
+          <div class="history-deltas">${deltaStr}</div>
+        </div>
+        <button class="history-del" data-id="${g.id}" title="Eintrag löschen">✕</button>
+      </div>`;
+    }).join('');
+    wrap.innerHTML = `<div class="section-title">Verlauf</div>${rows}`;
+    wrap.querySelectorAll('.history-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(confirm('Diesen Spieleintrag wirklich löschen?')){
+          state.games = state.games.filter(g=>g.id!==btn.dataset.id);
+          saveState(); render();
+        }
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- new game panel ----------
+  function openGamePanel(){
+    if(state.players.length < 2){
+      alert('Lege zuerst mindestens 2 Mitspieler in den Einstellungen an.');
+      return;
+    }
+    newGameDraft = { roundPlayers: [], gameTypeId: null, spieler: [], verlierer: [], result: 'win', schneider:false, schwarz:false, laufende:0, kontra:false, re:false };
+    renderGamePanel();
+    document.getElementById('gameOverlay').classList.add('open');
+  }
+  function closeGamePanel(){ document.getElementById('gameOverlay').classList.remove('open'); }
+
+  function renderGamePanel(){
+    const d = newGameDraft;
+    const gt = state.gameTypes.find(g=>g.id===d.gameTypeId);
+    const roundP = state.players.filter(p=>d.roundPlayers.includes(p.id));
+
+    let step2 = '', step3 = '', step4 = '';
+
+    if(d.roundPlayers.length >= 2){
+      step2 = `
+        <label class="field-label">Welches Spiel wurde gespielt?</label>
+        <div class="chip-row" id="gtChips">
+          ${state.gameTypes.map(g=>`<button type="button" class="chip ${g.id===d.gameTypeId?'selected':''}" data-gt="${g.id}">${escapeHtml(g.name)}</button>`).join('')}
+        </div>`;
+    }
+
+    if(gt){
+      if(gt.mode === 'ramsch'){
+        step3 = `
+          <label class="field-label">Wer hat verloren (Ramsch)?</label>
+          <div class="chip-row" id="verliererChips">
+            ${roundP.map(p=>`<button type="button" class="chip ${d.verlierer.includes(p.id)?'selected':''}" data-loser="${p.id}">${escapeHtml(p.name)}</button>`).join('')}
+          </div>
+          <label class="field-label">Laufende</label>
+          <input type="number" id="laufendeInput" min="0" max="8" value="${d.laufende}">`;
+      } else {
+        const need = gt.mode === 'partner' ? 2 : 1;
+        step3 = `
+          <label class="field-label">${gt.mode==='partner' ? 'Wer spielt (2 Spieler)?' : 'Wer spielt (Solist)?'}</label>
+          <div class="chip-row" id="spielerChips">
+            ${roundP.map(p=>`<button type="button" class="chip ${d.spieler.includes(p.id)?'selected':''}" data-spieler="${p.id}" ${(!d.spieler.includes(p.id) && d.spieler.length>=need)?'disabled':''}>${escapeHtml(p.name)}</button>`).join('')}
+          </div>
+          <label class="field-label">Ergebnis</label>
+          <div class="toggle-row">
+            <button type="button" class="chip ${d.result==='win'?'selected':''}" data-result="win">Gewonnen</button>
+            <button type="button" class="chip ${d.result==='lose'?'selected':''}" data-result="lose">Verloren</button>
+          </div>
+          <label class="field-label">Zuschläge</label>
+          <div class="check-row">
+            <label><input type="checkbox" id="chkSchneider" ${d.schneider?'checked':''}> Schneider</label>
+            <label><input type="checkbox" id="chkSchwarz" ${d.schwarz?'checked':''}> Schwarz</label>
+            <label><input type="checkbox" id="chkKontra" ${d.kontra?'checked':''}> Kontra</label>
+            <label><input type="checkbox" id="chkRe" ${d.re?'checked':''}> Re</label>
+          </div>
+          <label class="field-label">Laufende</label>
+          <input type="number" id="laufendeInput" min="0" max="8" value="${d.laufende}">`;
+      }
+    }
+
+    const canSubmit = gt && (gt.mode==='ramsch' ? d.verlierer.length>=1 : d.spieler.length === (gt.mode==='partner'?2:1));
+
+    document.getElementById('gamePanel').innerHTML = `
+      <div class="panel-head"><h2>Neues Spiel</h2><button class="panel-close" id="closeGameBtn">✕</button></div>
+      <label class="field-label">Wer sitzt an diesem Tisch?</label>
+      <div class="chip-row" id="roundChips">
+        ${state.players.map(p=>`<button type="button" class="chip ${d.roundPlayers.includes(p.id)?'selected':''}" data-round="${p.id}">${escapeHtml(p.name)}</button>`).join('')}
+      </div>
+      <div class="hint">Wähle alle, die mitgespielt haben (üblich: 4).</div>
+      ${step2}
+      ${step3}
+      <button class="btn-primary" id="submitGameBtn" ${canSubmit?'':'disabled'}>Spiel eintragen</button>
+    `;
+
+    document.getElementById('closeGameBtn').onclick = closeGamePanel;
+    document.getElementById('roundChips').querySelectorAll('.chip').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = btn.dataset.round;
+        if(d.roundPlayers.includes(id)){
+          d.roundPlayers = d.roundPlayers.filter(x=>x!==id);
+          d.spieler = d.spieler.filter(x=>x!==id);
+          d.verlierer = d.verlierer.filter(x=>x!==id);
+        } else {
+          d.roundPlayers.push(id);
+        }
+        renderGamePanel();
+      };
+    });
+    const gtChips = document.getElementById('gtChips');
+    if(gtChips) gtChips.querySelectorAll('.chip').forEach(btn=>{
+      btn.onclick = ()=>{ d.gameTypeId = btn.dataset.gt; d.spieler=[]; d.verlierer=[]; renderGamePanel(); };
+    });
+    const spChips = document.getElementById('spielerChips');
+    if(spChips) spChips.querySelectorAll('.chip').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = btn.dataset.spieler;
+        const need = gt.mode==='partner'?2:1;
+        if(d.spieler.includes(id)) d.spieler = d.spieler.filter(x=>x!==id);
+        else if(d.spieler.length < need) d.spieler.push(id);
+        renderGamePanel();
+      };
+    });
+    const loChips = document.getElementById('verliererChips');
+    if(loChips) loChips.querySelectorAll('.chip').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = btn.dataset.loser;
+        if(d.verlierer.includes(id)) d.verlierer = d.verlierer.filter(x=>x!==id);
+        else d.verlierer.push(id);
+        renderGamePanel();
+      };
+    });
+    const resultBtns = document.querySelectorAll('[data-result]');
+    resultBtns.forEach(btn=> btn.onclick = ()=>{ d.result = btn.dataset.result; renderGamePanel(); });
+    ['chkSchneider','chkSchwarz','chkKontra','chkRe'].forEach((elId,i)=>{
+      const el = document.getElementById(elId);
+      if(el) el.onchange = ()=>{ d[['schneider','schwarz','kontra','re'][i]] = el.checked; };
+    });
+    const lauf = document.getElementById('laufendeInput');
+    if(lauf) lauf.oninput = ()=>{ d.laufende = parseInt(lauf.value||'0',10); };
+
+    const submitBtn = document.getElementById('submitGameBtn');
+    if(submitBtn) submitBtn.onclick = async ()=>{
+      const game = { id: uid(), timestamp: Date.now(), gameTypeId: d.gameTypeId, roundPlayers: [...d.roundPlayers] };
+      if(gt.mode==='ramsch'){
+        game.verlierer = [...d.verlierer];
+        game.laufende = d.laufende||0;
+      } else {
+        game.spieler = [...d.spieler];
+        game.result = d.result;
+        game.schneider = d.schneider; game.schwarz = d.schwarz;
+        game.kontra = d.kontra; game.re = d.re;
+        game.laufende = d.laufende||0;
+      }
+      state.games.push(game);
+      await saveState();
+      render();
+      closeGamePanel();
+    };
+  }
+
+  // ---------- settings panel ----------
+  let settingsTab = 'players';
+  function openSettings(tab){
+    settingsTab = tab || 'players';
+    renderSettings();
+    document.getElementById('settingsOverlay').classList.add('open');
+  }
+  function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+
+  function renderSettings(){
+    const panel = document.getElementById('settingsPanel');
+    panel.innerHTML = `
+      <div class="panel-head"><h2>Einstellungen</h2><button class="panel-close" id="closeSettingsBtn">✕</button></div>
+      <div class="tab-row">
+        <button class="tab ${settingsTab==='players'?'active':''}" data-tab="players">Mitspieler</button>
+        <button class="tab ${settingsTab==='games'?'active':''}" data-tab="games">Spielarten</button>
+        <button class="tab ${settingsTab==='bonus'?'active':''}" data-tab="bonus">Boni</button>
+      </div>
+      <div id="settingsBody"></div>
+      <div class="danger-zone">
+        <button class="btn-ghost" id="resetBtn">Alle Daten zurücksetzen</button>
+      </div>
+    `;
+    document.getElementById('closeSettingsBtn').onclick = closeSettings;
+    panel.querySelectorAll('.tab').forEach(btn=>{
+      btn.onclick = ()=>{ settingsTab = btn.dataset.tab; renderSettings(); };
+    });
+    document.getElementById('resetBtn').onclick = async ()=>{
+      if(confirm('Wirklich ALLE Mitspieler, Spiele und Einstellungen löschen? Das betrifft die gesamte geteilte Tafel.')){
+        state = structuredClone(DEFAULT_STATE);
+        await saveState(); render(); renderSettings();
+      }
+    };
+    renderSettingsBody();
+  }
+
+  function renderSettingsBody(){
+    const body = document.getElementById('settingsBody');
+    if(settingsTab === 'players'){
+      body.innerHTML = `
+        ${state.players.map(p=>`
+          <div class="settings-item">
+            <input type="text" data-pid="${p.id}" value="${escapeHtml(p.name)}">
+            <button class="rm-btn" data-rmplayer="${p.id}">✕</button>
+          </div>`).join('')}
+        <div class="add-row">
+          <input type="text" id="newPlayerName" placeholder="Name des neuen Mitspielers">
+          <button class="btn-ghost" id="addPlayerBtn">Hinzufügen</button>
+        </div>
+      `;
+      body.querySelectorAll('[data-pid]').forEach(inp=>{
+        inp.onchange = async ()=>{
+          const p = state.players.find(x=>x.id===inp.dataset.pid);
+          if(p){ p.name = inp.value.trim() || p.name; await saveState(); render(); }
+        };
+      });
+      body.querySelectorAll('[data-rmplayer]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          if(confirm('Diesen Mitspieler und seine Historie aus der Anzeige entfernen?')){
+            state.players = state.players.filter(p=>p.id!==btn.dataset.rmplayer);
+            await saveState(); render(); renderSettingsBody();
+          }
+        };
+      });
+      document.getElementById('addPlayerBtn').onclick = async ()=>{
+        const inp = document.getElementById('newPlayerName');
+        const name = inp.value.trim();
+        if(!name) return;
+        state.players.push({ id: uid(), name });
+        inp.value='';
+        await saveState(); render(); renderSettingsBody();
+      };
+    }
+
+    if(settingsTab === 'games'){
+      body.innerHTML = `
+        ${state.gameTypes.map(g=>`
+          <div class="settings-item">
+            <input type="text" data-gid="${g.id}" data-field="name" value="${escapeHtml(g.name)}">
+            <select data-gid="${g.id}" data-field="mode">
+              <option value="solo" ${g.mode==='solo'?'selected':''}>Solo (1 vs 3)</option>
+              <option value="partner" ${g.mode==='partner'?'selected':''}>Partner (2 vs 2)</option>
+              <option value="ramsch" ${g.mode==='ramsch'?'selected':''}>Ramsch</option>
+            </select>
+            <input type="number" data-gid="${g.id}" data-field="baseValue" value="${g.baseValue}">
+            <button class="rm-btn" data-rmgame="${g.id}">✕</button>
+          </div>`).join('')}
+        <div class="add-row">
+          <input type="text" id="newGameName" placeholder="Name">
+          <select id="newGameMode">
+            <option value="solo">Solo</option>
+            <option value="partner">Partner</option>
+            <option value="ramsch">Ramsch</option>
+          </select>
+          <input type="number" id="newGameValue" placeholder="Wert" value="20" style="width:70px">
+          <button class="btn-ghost" id="addGameTypeBtn">+</button>
+        </div>
+        <div class="hint">Solo: einer spielt gegen drei. Partner: zwei gegen zwei (z.B. Sauspiel). Ramsch: die Verlierer zahlen an alle anderen.</div>
+      `;
+      body.querySelectorAll('[data-gid]').forEach(el=>{
+        el.onchange = async ()=>{
+          const g = state.gameTypes.find(x=>x.id===el.dataset.gid);
+          if(!g) return;
+          const field = el.dataset.field;
+          g[field] = field==='baseValue' ? (parseFloat(el.value)||0) : el.value;
+          await saveState(); render();
+        };
+      });
+      body.querySelectorAll('[data-rmgame]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          if(confirm('Diese Spielart löschen?')){
+            state.gameTypes = state.gameTypes.filter(g=>g.id!==btn.dataset.rmgame);
+            await saveState(); render(); renderSettingsBody();
+          }
+        };
+      });
+      document.getElementById('addGameTypeBtn').onclick = async ()=>{
+        const name = document.getElementById('newGameName').value.trim();
+        const mode = document.getElementById('newGameMode').value;
+        const val = parseFloat(document.getElementById('newGameValue').value)||0;
+        if(!name) return;
+        state.gameTypes.push({ id: uid(), name, mode, baseValue: val });
+        await saveState(); render(); renderSettingsBody();
+      };
+    }
+
+    if(settingsTab === 'bonus'){
+      const s = state.settings;
+      body.innerHTML = `
+        <label class="field-label">Schneider-Zuschlag</label>
+        <input type="number" id="bonusSchneider" value="${s.schneiderBonus}">
+        <label class="field-label">Schwarz-Zuschlag</label>
+        <input type="number" id="bonusSchwarz" value="${s.schwarzBonus}">
+        <label class="field-label">Wert pro Lauf(enden)</label>
+        <input type="number" id="bonusLaufende" value="${s.laufendeValue}">
+        <div class="hint">Kontra und Re verdoppeln den Spielwert jeweils automatisch. Diese Zuschläge gelten nicht für Ramsch.</div>
+      `;
+      const bind = (elId, field) => {
+        document.getElementById(elId).onchange = async (e)=>{
+          state.settings[field] = parseFloat(e.target.value)||0;
+          await saveState(); render();
+        };
+      };
+      bind('bonusSchneider','schneiderBonus');
+      bind('bonusSchwarz','schwarzBonus');
+      bind('bonusLaufende','laufendeValue');
+    }
+  }
+
+  // ---------- wiring ----------
+  document.getElementById('fabBtn').addEventListener('click', openGamePanel);
+  document.getElementById('settingsBtn').addEventListener('click', ()=>openSettings('players'));
+  document.getElementById('gameOverlay').addEventListener('click', (e)=>{ if(e.target.id==='gameOverlay') closeGamePanel(); });
+  document.getElementById('settingsOverlay').addEventListener('click', (e)=>{ if(e.target.id==='settingsOverlay') closeSettings(); });
+
+  window.__sk = { openSettings };
+
+  loadState();
+})();
+</script>
