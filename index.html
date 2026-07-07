@@ -185,6 +185,8 @@
 
   .loading{ text-align:center; padding:60px 20px; color: rgba(241,231,208,0.5); font-size:14px; }
 </style>
+<script src="https://gstatic.com"></script>
+<script src="https://gstatic.com"></script>
 
 <div class="app" id="app">
   <div class="header">
@@ -235,6 +237,19 @@
 
   let state = null;
   let newGameDraft = null;
+  // Firebase Live-Verbindung starten
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-0fysH5YmYrBex5SzFTp1Trp53m4_mDQ",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://schafkopfliste-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "schafkopfliste",
+    storageBucket: "schafkopfliste.firebasestorage.app",
+    messagingSenderId: "133840357845",
+    appId: "1:133840357845:web:6327f2209414b32209955c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const dbRef = firebase.database().ref("schafkopf_live_state");
+  let blockSync = false;
 
   // ---------- SVG suit icons ----------
   const SUITS = {
@@ -247,21 +262,30 @@
 
   document.getElementById('suitRow').innerHTML = SUIT_ORDER.map(s=>SUITS[s]).join('');
 
-  // ---------- persistence ----------
+   // ---------- persistence ----------
   async function loadState(){
-    try{
-      const res = await window.storage.get(STORAGE_KEY, true);
-      state = res ? JSON.parse(res.value) : structuredClone(DEFAULT_STATE);
-    }catch(e){
-      state = structuredClone(DEFAULT_STATE);
-    }
-    render();
+    // Lauscht live auf Änderungen in der Google Cloud
+    dbRef.on("value", (snapshot) => {
+      const cloudData = snapshot.val();
+      blockSync = true;
+      
+      // Wenn Google Daten hat, laden wir sie. Wenn nicht, starten wir eine leere Liste
+      state = cloudData ? JSON.parse(cloudData) : structuredClone(DEFAULT_STATE);
+      if (!cloudData) dbRef.set(JSON.stringify(state));
+      
+      render(); // Aktualisiert die Punkte auf dem Bildschirm
+      blockSync = false;
+    });
   }
   async function saveState(){
-    try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
-    }catch(e){ console.error('Speichern fehlgeschlagen', e); }
+    if (blockSync) return; // Verhindert Endlosschleifen
+    try { 
+      // Schickt das neue Spiel oder die geänderten Punkte sofort hoch zu Google
+      await dbRef.set(JSON.stringify(state)); 
+    }
+    catch(e){ console.error('Speichern fehlgeschlagen', e); }
   }
+
 
   // ---------- scoring ----------
   function computeDeltas(game){
